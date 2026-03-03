@@ -9,14 +9,5 @@ class Calculation:
         self.result = result
         self.timestamp = datetime.now()
 
-    def to_dict(self):
-        return {
-            "operation": self.operation,
-            "operand1": self.operand1,
-            "operand2": self.operand2,
-            "result": self.result,
-            "timestamp": self.timestamp,
-        }
-
     def __str__(self):
         return f"{self.timestamp} | {self.operation} | {self.operand1}, {self.operand2} = {self.result}"
