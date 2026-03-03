@@ -1,6 +1,7 @@
 from app.operations import OperationFactory
 from app.calculation import Calculation
 from app.calculator_memento import CalculatorMemento
+from app.history import LoggingObserver, AutoSaveObserver
 
 
 class Calculator:
@@ -9,6 +10,9 @@ class Calculator:
         self.observers = []
         self.undo_stack = []
         self.redo_stack = []
+        # register observers
+        self.register_observer(LoggingObserver())
+        self.register_observer(AutoSaveObserver())
 
     def register_observer(self, observer):
         self.observers.append(observer)
