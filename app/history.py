@@ -1,42 +1,39 @@
-import pandas as pd
 import os
-from app.logger import setup_logger
+import pandas as pd
+from app.calculator_config import CalculatorConfig
+
+config = CalculatorConfig()
+
+# Create history directory if not exists
+if not os.path.exists(config.HISTORY_DIR):
+    os.makedirs(config.HISTORY_DIR)
+
+history_file = os.path.join(config.HISTORY_DIR, "history.csv")
 
 
-class Observer:
-    def update(self, calculation):
-        pass
+def save_history(operation, operand1, operand2, result):
+    new_entry = {
+        "Operation": operation,
+        "Operand1": operand1,
+        "Operand2": operand2,
+        "Result": result
+    }
+
+    # If file exists, append
+    if os.path.exists(history_file):
+        df = pd.read_csv(history_file)
+        df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+
+        # Enforce MAX_HISTORY_SIZE
+        if len(df) > config.MAX_HISTORY_SIZE:
+            df = df.tail(config.MAX_HISTORY_SIZE)
+    else:
+        df = pd.DataFrame([new_entry])
+
+    df.to_csv(history_file, index=False)
 
 
-class LoggingObserver(Observer):
-    def __init__(self):
-        self.logger = setup_logger()
-
-    def update(self, calculation):
-        self.logger.info(
-            f"{calculation.operation} | "
-            f"{calculation.operand1}, {calculation.operand2} "
-            f"= {calculation.result}"
-        )
-
-
-class AutoSaveObserver(Observer):
-    def __init__(self, file_path="history/calculation_history.csv"):
-        self.file_path = file_path
-        os.makedirs("history", exist_ok=True)
-
-    def update(self, calculation):
-        data = [{
-            "operation": calculation.operation,
-            "operand1": calculation.operand1,
-            "operand2": calculation.operand2,
-            "result": calculation.result,
-            "timestamp": calculation.timestamp,
-        }]
-
-        df = pd.DataFrame(data)
-
-        if os.path.exists(self.file_path):
-            df.to_csv(self.file_path, mode="a", header=False, index=False)
-        else:
-            df.to_csv(self.file_path, index=False)
+def load_history():
+    if os.path.exists(history_file):
+        return pd.read_csv(history_file)
+    return pd.DataFrame()
