@@ -17,10 +17,8 @@ class Calculator:
         self.observers = []
         self.undo_stack = []
         self.redo_stack = []
+        self.config = CalculatorConfig()
 
-        self.config = CalculatorConfig()   # Added config
-
-        # register observers
         self.register_observer(LoggingObserver())
         self.register_observer(AutoSaveObserver())
 
@@ -53,9 +51,11 @@ class Calculator:
 
     def perform_calculation(self, operation_name, a, b):
 
-        # Enforce MAX_INPUT_VALUE
+        # MAX INPUT VALIDATION
         if abs(a) > self.config.MAX_INPUT_VALUE or abs(b) > self.config.MAX_INPUT_VALUE:
-            raise MaxInputExceededError(f"Input exceeds maximum allowed value of {self.config.MAX_INPUT_VALUE}")
+            raise MaxInputExceededError(
+                f"Input exceeds maximum allowed value of {self.config.MAX_INPUT_VALUE}"
+            )
 
         self.save_state()
         self.redo_stack.clear()
@@ -64,10 +64,10 @@ class Calculator:
             operation = OperationFactory.get_operation(operation_name)
         except Exception:
             raise InvalidOperationError(f"Invalid operation: {operation_name}")
-        
+
         result = operation.execute(a, b)
 
-        #Apply Precision
+        # PRECISION CONTROL
         result = round(result, self.config.PRECISION)
 
         calculation = Calculation(operation_name, a, b, result)
