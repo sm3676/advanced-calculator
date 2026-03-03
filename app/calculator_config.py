@@ -25,3 +25,4 @@ class CalculatorConfig:
 
         if self.MAX_INPUT_VALUE <= 0:
             raise ValueError("MAX_INPUT_VALUE must be greater than 0")
+  

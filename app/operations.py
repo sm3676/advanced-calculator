@@ -1,91 +1,77 @@
-from abc import ABC, abstractmethod
 import math
 
 
-class Operation(ABC):
-    @abstractmethod
-    def execute(self, a, b):
-        pass
-
-
-class AddOperation(Operation):
+class Add:
     def execute(self, a, b):
         return a + b
 
 
-class SubtractOperation(Operation):
+class Subtract:
     def execute(self, a, b):
         return a - b
 
 
-class MultiplyOperation(Operation):
+class Multiply:
     def execute(self, a, b):
         return a * b
 
 
-class DivideOperation(Operation):
+class Divide:
     def execute(self, a, b):
         if b == 0:
-            raise ValueError("Cannot divide by zero")
+            raise ZeroDivisionError("Cannot divide by zero")
         return a / b
 
 
-class PowerOperation(Operation):
+class Power:
     def execute(self, a, b):
         return a ** b
 
 
-class RootOperation(Operation):
+class Modulus:
     def execute(self, a, b):
-        if b == 0:
-            raise ValueError("Root degree cannot be zero")
-        return a ** (1 / b)
-
-
-class ModulusOperation(Operation):
-    def execute(self, a, b):
-        if b == 0:
-            raise ValueError("Cannot modulus by zero")
         return a % b
 
 
-class IntegerDivisionOperation(Operation):
+class IntDivide:
     def execute(self, a, b):
-        if b == 0:
-            raise ValueError("Cannot divide by zero")
         return a // b
 
 
-class PercentageOperation(Operation):
+class Percent:
     def execute(self, a, b):
-        if b == 0:
-            raise ValueError("Cannot calculate percentage with zero")
         return (a / b) * 100
 
 
-class AbsoluteDifferenceOperation(Operation):
+class AbsDiff:
     def execute(self, a, b):
         return abs(a - b)
+
+
+class Root:
+    def execute(self, a, b):
+        return math.pow(a, 1 / b)
 
 
 class OperationFactory:
 
     @staticmethod
-    def get_operation(operation_name):
+    def create(operation_name):
+
         operations = {
-            "add": AddOperation(),
-            "subtract": SubtractOperation(),
-            "multiply": MultiplyOperation(),
-            "divide": DivideOperation(),
-            "power": PowerOperation(),
-            "root": RootOperation(),
-            "modulus": ModulusOperation(),
-            "int_divide": IntegerDivisionOperation(),
-            "percent": PercentageOperation(),
-            "abs_diff": AbsoluteDifferenceOperation(),
+            "add": Add(),
+            "subtract": Subtract(),
+            "multiply": Multiply(),
+            "divide": Divide(),
+            "power": Power(),
+            "modulus": Modulus(),
+            "int_divide": IntDivide(),
+            "percent": Percent(),
+            "abs_diff": AbsDiff(),
+            "root": Root()
         }
 
         if operation_name not in operations:
-            raise ValueError(f"Invalid operation: {operation_name}")
+            raise ValueError("Invalid operation")
 
         return operations[operation_name]

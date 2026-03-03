@@ -1,85 +1,64 @@
 from app.operations import OperationFactory
 from app.calculation import Calculation
-from app.calculator_memento import CalculatorMemento
-from app.history import LoggingObserver, AutoSaveObserver
+from app.logger import get_logger
+from app.input_validators import validate_number
 from app.calculator_config import CalculatorConfig
 from app.exceptions import (
     InvalidOperationError,
-    MaxInputExceededError,
     UndoNotAvailableError,
     RedoNotAvailableError,
 )
 
 
 class Calculator:
+
     def __init__(self):
         self.history = []
-        self.observers = []
-        self.undo_stack = []
-        self.redo_stack = []
+        self._redo_stack = []
+        self.logger = get_logger()
         self.config = CalculatorConfig()
 
-        self.register_observer(LoggingObserver())
-        self.register_observer(AutoSaveObserver())
+    def calculate(self, operation, a, b):
 
-    def register_observer(self, observer):
-        self.observers.append(observer)
-
-    def notify_observers(self, calculation):
-        for observer in self.observers:
-            observer.update(calculation)
-
-    def save_state(self):
-        memento = CalculatorMemento(self.history.copy())
-        self.undo_stack.append(memento)
-
-    def undo(self):
-        if not self.undo_stack:
-            raise UndoNotAvailableError("No actions to undo")
-
-        self.redo_stack.append(CalculatorMemento(self.history.copy()))
-        memento = self.undo_stack.pop()
-        self.history = memento.get_saved_state()
-
-    def redo(self):
-        if not self.redo_stack:
-            raise RedoNotAvailableError("No actions to redo")
-
-        self.undo_stack.append(CalculatorMemento(self.history.copy()))
-        memento = self.redo_stack.pop()
-        self.history = memento.get_saved_state()
-
-    def perform_calculation(self, operation_name, a, b):
-
-        # MAX INPUT VALIDATION
-        if abs(a) > self.config.MAX_INPUT_VALUE or abs(b) > self.config.MAX_INPUT_VALUE:
-            raise MaxInputExceededError(
-                f"Input exceeds maximum allowed value of {self.config.MAX_INPUT_VALUE}"
-            )
-
-        self.save_state()
-        self.redo_stack.clear()
+        # Validate inputs using config max value
+        a = validate_number(a, self.config.MAX_INPUT_VALUE)
+        b = validate_number(b, self.config.MAX_INPUT_VALUE)
 
         try:
-            operation = OperationFactory.get_operation(operation_name)
-        except Exception:
-            raise InvalidOperationError(f"Invalid operation: {operation_name}")
+            op = OperationFactory.create(operation)
+        except ValueError:
+            raise InvalidOperationError("Invalid operation requested")
 
-        result = operation.execute(a, b)
+        result = op.execute(a, b)
 
-        # PRECISION CONTROL
-        result = round(result, self.config.PRECISION)
+        calculation = Calculation(a, b, operation, result)
 
-        calculation = Calculation(operation_name, a, b, result)
         self.history.append(calculation)
+        self._redo_stack.clear()
 
-        self.notify_observers(calculation)
+        self.logger.info(str(calculation))
 
         return result
 
-    def get_history(self):
-        return self.history
+    def undo(self):
+        if not self.history:
+            raise UndoNotAvailableError("Nothing to undo")
+
+        calc = self.history.pop()
+        self._redo_stack.append(calc)
+        return calc
+
+    def redo(self):
+        if not self._redo_stack:
+            raise RedoNotAvailableError("Nothing to redo")
+
+        calc = self._redo_stack.pop()
+        self.history.append(calc)
+        return calc
 
     def clear_history(self):
-        self.save_state()
         self.history.clear()
+        self._redo_stack.clear()
+
+    def get_history(self):
+        return self.history
