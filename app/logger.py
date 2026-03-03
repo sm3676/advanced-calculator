@@ -1,20 +1,19 @@
 import logging
 import os
+from app.calculator_config import CalculatorConfig
 
+config = CalculatorConfig()
 
-def setup_logger(log_file="calculator.log"):
-    logger = logging.getLogger("CalculatorLogger")
-    logger.setLevel(logging.INFO)
+if not os.path.exists(config.LOG_DIR):
+    os.makedirs(config.LOG_DIR)
 
-    if not logger.handlers:
-        os.makedirs("logs", exist_ok=True)
+log_file = os.path.join(config.LOG_DIR, "calculator.log")
 
-        file_handler = logging.FileHandler(f"logs/{log_file}")
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s"
-        )
-        file_handler.setFormatter(formatter)
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
-        logger.addHandler(file_handler)
-
-    return logger
+def get_logger():
+    return logging.getLogger()
